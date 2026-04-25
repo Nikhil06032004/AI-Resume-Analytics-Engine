@@ -1,153 +1,74 @@
 import React, { useState } from 'react';
-import { Briefcase, Upload, Zap } from 'lucide-react';
+import { Briefcase, Zap, SkipForward, Loader2 } from 'lucide-react';
 import { useResume } from '../../contexts/ResumeContext';
 
 const JobDescriptionInput: React.FC = () => {
-  const { setCurrentStep, analyzeResume } = useResume();
-  const [jobDescription, setJobDescription] = useState('');
-  const [isProcessing, setIsProcessing] = useState(false);
+  const { analyzeResume, isAnalyzing } = useResume();
+  const [jobDesc, setJobDesc] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!jobDescription.trim()) return;
-
-    setIsProcessing(true);
-    
-    try {
-      // Analyze resume with job description
-      await analyzeResume(jobDescription);
-    } catch (error) {
-      console.error('Analysis failed:', error);
-    } finally {
-      setIsProcessing(false);
-    }
+    if (!jobDesc.trim()) return;
+    await analyzeResume(jobDesc.trim());
   };
 
   const handleSkip = async () => {
-    setIsProcessing(true);
-    try {
-      // Analyze resume without job description
-      await analyzeResume();
-    } catch (error) {
-      console.error('Analysis failed:', error);
-    } finally {
-      setIsProcessing(false);
-    }
+    await analyzeResume();
   };
 
   return (
     <div className="max-w-4xl mx-auto">
       <div className="text-center mb-8">
-        <div className="flex items-center justify-center w-16 h-16 bg-purple-600 rounded-full mx-auto mb-4">
-          <Briefcase className="w-8 h-8 text-white" />
+        <div className="inline-flex items-center justify-center w-14 h-14 bg-purple-600 rounded-2xl mb-4 shadow-lg">
+          <Briefcase className="w-7 h-7 text-white" />
         </div>
-        <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
+        <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-3">
           Job Description Matching
         </h2>
-        <p className="text-lg text-gray-600 dark:text-gray-400">
-          Paste a job description to get targeted insights and skill gap analysis
+        <p className="text-gray-600 dark:text-gray-400 max-w-xl mx-auto">
+          Paste a job description to tailor the AI feedback and skill gap analysis to a specific role.
+          You can also skip this step.
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-5">
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-          <label htmlFor="jobDescription" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Job Description
+          <label htmlFor="jobDesc" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Job Description <span className="text-gray-400">(optional)</span>
           </label>
           <textarea
-            id="jobDescription"
-            value={jobDescription}
-            onChange={(e) => setJobDescription(e.target.value)}
+            id="jobDesc"
+            value={jobDesc}
+            onChange={e => setJobDesc(e.target.value)}
             rows={10}
-            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white resize-none"
-            placeholder="Paste the job description here...
-
-Example:
-We are looking for a Senior Frontend Developer with 5+ years of experience in React, TypeScript, and modern web technologies. The ideal candidate should have experience with:
-
-• React, Redux, TypeScript
-• Modern CSS frameworks (Tailwind, SCSS)
-• RESTful APIs and GraphQL
-• Testing frameworks (Jest, Cypress)
-• Git version control
-• Agile development methodologies
-
-Requirements:
-- Bachelor's degree in Computer Science or related field
-- 5+ years of frontend development experience
-- Strong problem-solving skills
-- Experience with cloud platforms (AWS, Azure)
-- Excellent communication skills"
+            disabled={isAnalyzing}
+            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-white resize-none text-sm disabled:opacity-50"
+            placeholder="Paste the job description here…"
           />
         </div>
 
-        <div className="flex justify-center space-x-4">
+        <div className="flex justify-center gap-4">
           <button
             type="submit"
-            disabled={!jobDescription.trim() || isProcessing}
-            className="flex items-center space-x-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+            disabled={!jobDesc.trim() || isAnalyzing}
+            className="inline-flex items-center gap-2 px-7 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-semibold"
           >
-            {isProcessing ? (
-              <>
-                <Zap className="w-5 h-5 animate-pulse" />
-                <span>Analyzing...</span>
-              </>
-            ) : (
-              <>
-                <Upload className="w-5 h-5" />
-                <span>Analyze Match</span>
-              </>
-            )}
+            {isAnalyzing
+              ? <><Loader2 className="w-4 h-4 animate-spin" /> Analyzing…</>
+              : <><Zap className="w-4 h-4" /> Analyze with Job Match</>}
           </button>
-          
+
           <button
             type="button"
             onClick={handleSkip}
-            disabled={isProcessing}
-            className="px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors font-medium disabled:opacity-50"
+            disabled={isAnalyzing}
+            className="inline-flex items-center gap-2 px-7 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors font-semibold disabled:opacity-50"
           >
-            {isProcessing ? 'Analyzing...' : 'Skip for Now'}
+            <SkipForward className="w-4 h-4" />
+            Skip
           </button>
         </div>
       </form>
-
-      <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 text-center">
-          <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center mx-auto mb-4">
-            <Zap className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-          </div>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-            Skill Gap Analysis
-          </h3>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            Identify missing skills and get suggestions for improvement
-          </p>
-        </div>
-
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 text-center">
-          <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center mx-auto mb-4">
-            <Briefcase className="w-6 h-6 text-green-600 dark:text-green-400" />
-          </div>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-            Match Score
-          </h3>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            Get a compatibility score between your resume and the job
-          </p>
-        </div>
-
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 text-center">
-          <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center mx-auto mb-4">
-            <Upload className="w-6 h-6 text-purple-600 dark:text-purple-400" />
-          </div>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-            Keyword Optimization
-          </h3>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            Learn which keywords to include for better ATS compatibility
-          </p>
-        </div>
-      </div>
     </div>
   );
 };

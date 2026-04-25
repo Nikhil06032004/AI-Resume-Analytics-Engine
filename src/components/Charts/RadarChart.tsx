@@ -1,123 +1,76 @@
-import React from 'react';
+import React, { useMemo } from 'react';
+import ReactECharts from 'echarts-for-react';
+import { useTheme } from '../../contexts/ThemeContext';
 
 interface RadarChartProps {
   data: { label: string; value: number }[];
-  size?: number;
   title?: string;
 }
 
-const RadarChart: React.FC<RadarChartProps> = ({ data, size = 300, title }) => {
-  const centerX = size / 2;
-  const centerY = size / 2;
-  const radius = size * 0.35;
-  const maxValue = 100;
+const RadarChart: React.FC<RadarChartProps> = ({ data, title }) => {
+  const { theme } = useTheme();
+  const dark = theme === 'dark';
+  const lineColor  = dark ? '#374151' : '#E5E7EB';
+  const textColor  = dark ? '#9CA3AF' : '#6B7280';
+  const titleColor = dark ? '#F9FAFB' : '#111827';
+  const bg         = dark ? '#1F2937' : '#ffffff';
+  const border     = dark ? '#374151' : '#E5E7EB';
 
-  const angleStep = (2 * Math.PI) / data.length;
-
-  const getPoint = (index: number, value: number) => {
-    const angle = index * angleStep - Math.PI / 2;
-    const r = (value / maxValue) * radius;
-    return {
-      x: centerX + r * Math.cos(angle),
-      y: centerY + r * Math.sin(angle)
-    };
-  };
-
-  const getAxisPoint = (index: number) => {
-    const angle = index * angleStep - Math.PI / 2;
-    return {
-      x: centerX + radius * Math.cos(angle),
-      y: centerY + radius * Math.sin(angle)
-    };
-  };
-
-  const dataPoints = data.map((item, index) => getPoint(index, item.value));
-  const pathData = dataPoints.map((point, index) => 
-    `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`
-  ).join(' ') + ' Z';
+  const option = useMemo(() => ({
+    backgroundColor: 'transparent',
+    tooltip: {
+      trigger: 'item',
+      backgroundColor: bg, borderColor: border,
+      textStyle: { color: titleColor, fontSize: 12 },
+      extraCssText: 'border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,.12)',
+      formatter: (params: { value: number[] }) =>
+        data.map((d, i) => `${d.label}: <b>${params.value[i]}</b>`).join('<br/>'),
+    },
+    radar: {
+      indicator: data.map(d => ({ name: d.label, max: 100 })),
+      splitLine: { lineStyle: { color: lineColor, type: 'dashed' } },
+      axisLine: { lineStyle: { color: lineColor } },
+      splitArea: {
+        show: true,
+        areaStyle: {
+          color: dark
+            ? ['rgba(55,65,81,0.3)', 'rgba(55,65,81,0.1)']
+            : ['rgba(243,244,246,0.5)', 'rgba(255,255,255,0.3)'],
+        },
+      },
+      axisName: {
+        color: textColor, fontSize: 11, fontWeight: '500',
+        padding: [3, 5],
+        backgroundColor: dark ? 'rgba(31,41,55,0.7)' : 'rgba(249,250,251,0.85)',
+        borderRadius: 4,
+      },
+      radius: '62%',
+    },
+    series: [{
+      type: 'radar',
+      data: [{
+        value: data.map(d => d.value),
+        name: 'Score',
+        symbol: 'circle', symbolSize: 6,
+        lineStyle: { color: '#3B82F6', width: 2.5 },
+        areaStyle: {
+          color: {
+            type: 'radial', x: 0.5, y: 0.5, r: 0.5,
+            colorStops: [
+              { offset: 0, color: 'rgba(59,130,246,0.35)' },
+              { offset: 1, color: 'rgba(59,130,246,0.05)' },
+            ],
+          },
+        },
+        itemStyle: { color: '#3B82F6', borderColor: dark ? '#1F2937' : '#fff', borderWidth: 2 },
+      }],
+    }],
+  }), [data, dark, lineColor, textColor, titleColor, bg, border]);
 
   return (
-    <div className="w-full">
-      {title && (
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 text-center">
-          {title}
-        </h3>
-      )}
-      <div className="flex justify-center">
-        <svg width={size} height={size} className="drop-shadow-sm">
-          {/* Grid lines */}
-          {[0.2, 0.4, 0.6, 0.8, 1].map((scale) => (
-            <polygon
-              key={scale}
-              points={data.map((_, index) => {
-                const point = getPoint(index, scale * maxValue);
-                return `${point.x},${point.y}`;
-              }).join(' ')}
-              fill="none"
-              stroke="#E5E7EB"
-              strokeWidth="1"
-            />
-          ))}
-          
-          {/* Axis lines */}
-          {data.map((_, index) => {
-            const axisPoint = getAxisPoint(index);
-            return (
-              <line
-                key={index}
-                x1={centerX}
-                y1={centerY}
-                x2={axisPoint.x}
-                y2={axisPoint.y}
-                stroke="#E5E7EB"
-                strokeWidth="1"
-              />
-            );
-          })}
-          
-          {/* Data area */}
-          <path
-            d={pathData}
-            fill="rgba(59, 130, 246, 0.2)"
-            stroke="#3B82F6"
-            strokeWidth="2"
-          />
-          
-          {/* Data points */}
-          {dataPoints.map((point, index) => (
-            <circle
-              key={index}
-              cx={point.x}
-              cy={point.y}
-              r="4"
-              fill="#3B82F6"
-              stroke="white"
-              strokeWidth="2"
-            />
-          ))}
-          
-          {/* Labels */}
-          {data.map((item, index) => {
-            const labelPoint = getAxisPoint(index);
-            const angle = index * angleStep - Math.PI / 2;
-            const isLeft = Math.cos(angle) < 0;
-            const isTop = Math.sin(angle) < 0;
-            
-            return (
-              <text
-                key={index}
-                x={labelPoint.x + (isLeft ? -10 : 10)}
-                y={labelPoint.y + (isTop ? -10 : 20)}
-                textAnchor={isLeft ? 'end' : 'start'}
-                className="text-xs fill-gray-600 dark:fill-gray-400"
-                dominantBaseline="middle"
-              >
-                {item.label}
-              </text>
-            );
-          })}
-        </svg>
-      </div>
+    <div>
+      {title && <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-1 text-center">{title}</h3>}
+      <ReactECharts option={option} style={{ height: 270 }} notMerge />
     </div>
   );
 };

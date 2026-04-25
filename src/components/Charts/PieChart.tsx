@@ -1,83 +1,60 @@
-import React from 'react';
+import React, { useMemo } from 'react';
+import ReactECharts from 'echarts-for-react';
+import { useTheme } from '../../contexts/ThemeContext';
 
 interface PieChartProps {
-  data: { label: string; value: number; color: string }[];
-  size?: number;
+  data: { label: string; value: number; color?: string }[];
   title?: string;
 }
 
-const PieChart: React.FC<PieChartProps> = ({ data, size = 200, title }) => {
-  const centerX = size / 2;
-  const centerY = size / 2;
-  const radius = size * 0.4;
+const PALETTE = ['#3B82F6','#10B981','#8B5CF6','#F59E0B','#EF4444','#06B6D4','#F97316','#84CC16'];
 
-  let cumulativePercentage = 0;
-  const total = data.reduce((sum, item) => sum + item.value, 0);
+const PieChart: React.FC<PieChartProps> = ({ data, title }) => {
+  const { theme } = useTheme();
+  const dark = theme === 'dark';
+  const textColor  = dark ? '#9CA3AF' : '#6B7280';
+  const bg         = dark ? '#1F2937' : '#ffffff';
+  const border     = dark ? '#374151' : '#E5E7EB';
+  const titleColor = dark ? '#F9FAFB' : '#111827';
+  const filtered   = data.filter(d => d.value > 0);
 
-  const createArcPath = (startAngle: number, endAngle: number) => {
-    const start = polarToCartesian(centerX, centerY, radius, endAngle);
-    const end = polarToCartesian(centerX, centerY, radius, startAngle);
-    const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
-    
-    return [
-      "M", centerX, centerY,
-      "L", start.x, start.y,
-      "A", radius, radius, 0, largeArcFlag, 0, end.x, end.y,
-      "Z"
-    ].join(" ");
-  };
-
-  const polarToCartesian = (centerX: number, centerY: number, radius: number, angleInDegrees: number) => {
-    const angleInRadians = (angleInDegrees - 90) * Math.PI / 180.0;
-    return {
-      x: centerX + (radius * Math.cos(angleInRadians)),
-      y: centerY + (radius * Math.sin(angleInRadians))
-    };
-  };
+  const option = useMemo(() => ({
+    backgroundColor: 'transparent',
+    tooltip: {
+      trigger: 'item',
+      formatter: '{b}: <b>{c}</b> ({d}%)',
+      backgroundColor: bg, borderColor: border,
+      textStyle: { color: titleColor, fontSize: 12 },
+      extraCssText: 'border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,.12)',
+    },
+    legend: {
+      orient: 'vertical', right: '2%', top: 'middle',
+      icon: 'circle', itemWidth: 8, itemHeight: 8,
+      textStyle: { color: textColor, fontSize: 11, lineHeight: 20 },
+    },
+    series: [{
+      type: 'pie',
+      radius: ['42%', '70%'],
+      center: ['36%', '50%'],
+      avoidLabelOverlap: true,
+      itemStyle: { borderRadius: 5, borderColor: dark ? '#1F2937' : '#ffffff', borderWidth: 2 },
+      label: { show: false },
+      emphasis: {
+        label: { show: true, fontSize: 13, fontWeight: 'bold', color: titleColor },
+        itemStyle: { shadowBlur: 10, shadowColor: 'rgba(0,0,0,0.3)' },
+      },
+      data: filtered.map((item, i) => ({
+        value: item.value,
+        name: item.label,
+        itemStyle: { color: item.color ?? PALETTE[i % PALETTE.length] },
+      })),
+    }],
+  }), [filtered, dark, bg, border, textColor, titleColor]);
 
   return (
-    <div className="w-full">
-      {title && (
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 text-center">
-          {title}
-        </h3>
-      )}
-      <div className="flex flex-col lg:flex-row items-center justify-center space-y-4 lg:space-y-0 lg:space-x-8">
-        <svg width={size} height={size} className="drop-shadow-sm">
-          {data.map((item, index) => {
-            const percentage = (item.value / total) * 100;
-            const startAngle = cumulativePercentage * 3.6;
-            const endAngle = (cumulativePercentage + percentage) * 3.6;
-            
-            cumulativePercentage += percentage;
-            
-            return (
-              <path
-                key={index}
-                d={createArcPath(startAngle, endAngle)}
-                fill={item.color}
-                stroke="white"
-                strokeWidth="2"
-                className="hover:opacity-80 transition-opacity cursor-pointer"
-              />
-            );
-          })}
-        </svg>
-        
-        <div className="space-y-2">
-          {data.map((item, index) => (
-            <div key={index} className="flex items-center space-x-2">
-              <div
-                className="w-4 h-4 rounded-full"
-                style={{ backgroundColor: item.color }}
-              />
-              <span className="text-sm text-gray-700 dark:text-gray-300">
-                {item.label}: {item.value}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
+    <div>
+      {title && <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-1 text-center">{title}</h3>}
+      <ReactECharts option={option} style={{ height: 230 }} notMerge />
     </div>
   );
 };

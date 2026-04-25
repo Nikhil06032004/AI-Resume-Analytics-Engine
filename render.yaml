@@ -1,0 +1,38 @@
+# Render deployment configuration
+# Docs: https://render.com/docs/blueprint-spec
+#
+# HOW TO USE:
+#   1. Push this file to your GitHub repo
+#   2. In Render dashboard → New → Blueprint
+#   3. Connect your repo — Render reads this file automatically
+#   4. Set secret env vars (MONGODB_URI, AI_API_KEY) in the Render dashboard
+
+services:
+  - type: web
+    name: resume-insights-api
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+
+    # Health check — Render uses this to decide if the deploy succeeded
+    healthCheckPath: /health
+
+    # Auto-deploy every time main branch is pushed
+    autoDeploy: true
+
+    # Environment variables
+    # Values marked `sync: false` must be set manually in the Render dashboard
+    envVars:
+      - key: APP_VERSION
+        value: "5.0.0"
+      - key: DEBUG
+        value: "false"
+      - key: MONGODB_URI
+        sync: false         # Set in Render dashboard → Environment
+      - key: AI_API_KEY
+        sync: false         # Set in Render dashboard → Environment
+      - key: FRONTEND_URL
+        sync: false         # Set to your Vercel URL after first deploy
+
+    # Render free tier: 512 MB RAM, shared CPU
+    # The service sleeps after 15 min of inactivity on the free tier

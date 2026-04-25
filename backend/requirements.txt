@@ -1,0 +1,37 @@
+# ── Web framework ────────────────────────────────────────────────
+fastapi
+uvicorn[standard]
+python-multipart
+
+# ── File parsing ─────────────────────────────────────────────────
+pdfplumber
+python-docx
+
+# ── OCR ──────────────────────────────────────────────────────────
+pytesseract
+pdf2image
+Pillow
+# headless variant — no Qt/GTK GUI, works in Docker and on servers
+opencv-python-headless
+numpy
+
+# ── NLP ──────────────────────────────────────────────────────────
+spacy
+
+# ── AI ───────────────────────────────────────────────────────────
+google-genai
+
+# ── Database ─────────────────────────────────────────────────────
+motor
+
+# ── Config ───────────────────────────────────────────────────────
+pydantic-settings
+
+# ── Rate limiting ────────────────────────────────────────────────
+slowapi
+limits
+
+# ── Testing (also installed in CI) ───────────────────────────────
+pytest
+pytest-asyncio
+httpx

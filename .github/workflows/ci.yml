@@ -1,0 +1,119 @@
+name: CI
+
+# Runs on every PR targeting main, and on every push to main.
+# All jobs must pass before a PR can be merged (set as required checks in GitHub).
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  # ─────────────────────────────────────────────────────────────
+  #  Frontend — lint + type-check + production build
+  # ─────────────────────────────────────────────────────────────
+  frontend:
+    name: Frontend CI
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+      - name: Build
+        run: npm run build
+        env:
+          # Use a dummy URL so the build doesn't fail on missing env var
+          VITE_API_URL: https://api.example.com
+
+      - name: Upload build artefact
+        uses: actions/upload-artifact@v4
+        if: github.ref == 'refs/heads/main'
+        with:
+          name: frontend-dist
+          path: dist/
+          retention-days: 1
+
+  # ─────────────────────────────────────────────────────────────
+  #  Backend — lint + type-check + unit tests
+  # ─────────────────────────────────────────────────────────────
+  backend:
+    name: Backend CI
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      # ruff is the fastest Python linter — replaces flake8 + isort + pyupgrade
+      - name: Install ruff
+        run: pip install ruff
+
+      - name: Lint with ruff
+        run: ruff check app/
+
+      - name: Download spaCy model (needed for import)
+        run: python -m spacy download en_core_web_sm --no-deps
+
+      - name: Run tests
+        run: pytest tests/ -v --tb=short
+        env:
+          # No real credentials in CI — tests are written to handle this
+          MONGODB_URI: ""
+          AI_API_KEY: ""
+
+  # ─────────────────────────────────────────────────────────────
+  #  Docker build check (ensures Dockerfile is valid)
+  # ─────────────────────────────────────────────────────────────
+  docker-build:
+    name: Docker Build Check
+    runs-on: ubuntu-latest
+    # Only run on PRs to save minutes on every push to main
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image (no push)
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: false
+          tags: resume-insights-api:pr-${{ github.event.number }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

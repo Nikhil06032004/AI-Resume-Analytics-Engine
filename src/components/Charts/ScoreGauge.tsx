@@ -1,87 +1,59 @@
-import React from 'react';
+import React, { useMemo } from 'react';
+import ReactECharts from 'echarts-for-react';
+import { useTheme } from '../../contexts/ThemeContext';
 
 interface ScoreGaugeProps {
   score: number;
-  maxScore?: number;
-  size?: number;
   title?: string;
 }
 
-const ScoreGauge: React.FC<ScoreGaugeProps> = ({ score, maxScore = 100, size = 200, title }) => {
-  const centerX = size / 2;
-  const centerY = size / 2;
-  const radius = size * 0.35;
-  const strokeWidth = 12;
+function scoreColor(s: number) {
+  return s >= 80 ? '#10B981' : s >= 60 ? '#F59E0B' : s >= 40 ? '#F97316' : '#EF4444';
+}
+function scoreLabel(s: number) {
+  return s >= 80 ? 'Excellent' : s >= 60 ? 'Good' : s >= 40 ? 'Fair' : 'Needs Work';
+}
 
-  const circumference = 2 * Math.PI * radius;
-  const percentage = (score / maxScore) * 100;
-  const offset = circumference - (percentage / 100) * circumference;
+const ScoreGauge: React.FC<ScoreGaugeProps> = ({ score, title }) => {
+  const { theme } = useTheme();
+  const dark = theme === 'dark';
 
-  const getScoreColor = (score: number) => {
-    if (score >= 80) return '#10B981'; // Green
-    if (score >= 60) return '#F59E0B'; // Yellow
-    if (score >= 40) return '#EF4444'; // Red
-    return '#EF4444'; // Red
-  };
+  const option = useMemo(() => ({
+    backgroundColor: 'transparent',
+    series: [{
+      type: 'gauge',
+      startAngle: 200,
+      endAngle: -20,
+      min: 0,
+      max: 100,
+      radius: '88%',
+      center: ['50%', '55%'],
+      progress: { show: true, width: 22, itemStyle: { color: scoreColor(score) } },
+      pointer: { show: false },
+      axisLine: { lineStyle: { width: 22, color: [[1, dark ? '#374151' : '#E5E7EB']] } },
+      axisTick: { show: false },
+      splitLine: { show: false },
+      axisLabel: { show: false },
+      detail: {
+        valueAnimation: true,
+        offsetCenter: [0, '-5%'],
+        fontSize: 42,
+        fontWeight: 'bold',
+        color: dark ? '#F9FAFB' : '#111827',
+        formatter: '{value}',
+      },
+      data: [{
+        value: score,
+        name: scoreLabel(score),
+        title: { offsetCenter: [0, '30%'], fontSize: 13, fontWeight: '600', color: scoreColor(score) },
+      }],
+    }],
+  }), [score, dark]);
 
   return (
-    <div className="w-full">
-      {title && (
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 text-center">
-          {title}
-        </h3>
-      )}
-      <div className="flex flex-col items-center">
-        <div className="relative">
-          <svg width={size} height={size} className="transform -rotate-90">
-            <circle
-              cx={centerX}
-              cy={centerY}
-              r={radius}
-              stroke="#E5E7EB"
-              strokeWidth={strokeWidth}
-              fill="none"
-            />
-            <circle
-              cx={centerX}
-              cy={centerY}
-              r={radius}
-              stroke={getScoreColor(score)}
-              strokeWidth={strokeWidth}
-              fill="none"
-              strokeDasharray={circumference}
-              strokeDashoffset={offset}
-              strokeLinecap="round"
-              className="transition-all duration-1000 ease-out"
-            />
-          </svg>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="text-center">
-              <div className="text-3xl font-bold text-gray-900 dark:text-white">
-                {score}
-              </div>
-              <div className="text-sm text-gray-500 dark:text-gray-400">
-                out of {maxScore}
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <div className="mt-4 text-center">
-          <div className="text-sm font-medium text-gray-600 dark:text-gray-400">
-            Resume Score
-          </div>
-          <div className={`text-lg font-semibold ${
-            score >= 80 ? 'text-green-600' : 
-            score >= 60 ? 'text-yellow-600' : 
-            'text-red-600'
-          }`}>
-            {score >= 80 ? 'Excellent' : 
-             score >= 60 ? 'Good' : 
-             score >= 40 ? 'Fair' : 'Needs Improvement'}
-          </div>
-        </div>
-      </div>
+    <div>
+      {title && <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-1 text-center">{title}</h3>}
+      <ReactECharts option={option} style={{ height: 230 }} notMerge />
     </div>
   );
 };
