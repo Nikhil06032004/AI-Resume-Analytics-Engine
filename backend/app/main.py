@@ -63,18 +63,17 @@ app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # ── CORS ─────────────────────────────────────────────────────────
-# In production set FRONTEND_URL to your Vercel domain.
-# In development (FRONTEND_URL not set) all origins are allowed.
-_origins: list[str] = ["http://localhost:5173", "http://localhost:3000"]
-if settings.frontend_url:
-    _origins.append(settings.frontend_url)
-
+# Public REST API — no cookies/sessions, so allow_credentials=False
+# is correct and lets us safely use allow_origins=["*"].
+# This avoids the Starlette ValueError that crashes startup when
+# allow_credentials=True is combined with the wildcard origin.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=_origins if settings.frontend_url else ["*"],
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["X-Process-Time-Ms"],
 )
 
 # ── Request timing middleware ─────────────────────────────────────
@@ -107,6 +106,19 @@ async def health_check() -> dict:
         "version":       settings.app_version,
         "database":      "connected" if db_ok else "disconnected",
         "ai_configured": bool(settings.ai_api_key),
+    }
+
+
+@app.get("/debug", tags=["Health"])
+async def debug_config() -> dict:
+    """Shows non-secret runtime config — use to verify env vars on Render."""
+    return {
+        "version":        settings.app_version,
+        "debug":          settings.debug,
+        "ai_configured":  bool(settings.ai_api_key),
+        "db_configured":  bool(settings.mongodb_uri),
+        "frontend_url":   settings.frontend_url or "(not set — all origins allowed)",
+        "cors_mode":      "allow_origins=['*']",
     }
 
 
