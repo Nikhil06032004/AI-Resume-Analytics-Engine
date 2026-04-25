@@ -151,7 +151,7 @@ const Dashboard: React.FC = () => {
   }
 
   const {
-    filename, overallScore, scores, features, nlpInsights,
+    filename, overallScore, scores, features,
     aiFeedback, aiError: resultAiError, strengths, improvements, sectionScores, keywordFrequency,
   } = analysisResult;
 
