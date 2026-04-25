@@ -1,0 +1,22 @@
+# Ruff configuration for Resume Insights backend
+# https://docs.astral.sh/ruff/configuration/
+
+line-length = 100
+
+[lint]
+# E = pycodestyle errors
+# F = Pyflakes (unused imports, undefined names)
+# W = pycodestyle warnings
+# I = isort (import ordering)
+select = ["E", "F", "W", "I"]
+
+ignore = [
+    "E501",   # line too long — handled by line-length above, banner strings are exempt
+    "F401",   # imported but unused — false positives on conditional SDK imports (google-genai)
+    "W293",   # whitespace before ':' — noisy in f-strings
+    "E741",   # ambiguous variable name (l, O, I) — not an issue here
+]
+
+# Don't lint test files with the same strictness
+[lint.per-file-ignores]
+"tests/*" = ["F811", "S101"]   # allow assert statements in tests

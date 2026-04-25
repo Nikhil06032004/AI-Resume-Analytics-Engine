@@ -45,7 +45,6 @@ from bson.errors import InvalidId
 
 from app.core.database import get_gridfs_bucket, resumes_col
 
-
 # ---------------------------------------------------------------------------
 # Internal helpers
 # ---------------------------------------------------------------------------
@@ -61,11 +60,16 @@ _CONTENT_TYPES: dict[str, str] = {
 
 
 def _grade(score: float) -> str:
-    if score >= 90: return "A+"
-    if score >= 80: return "A"
-    if score >= 70: return "B"
-    if score >= 60: return "C"
-    if score >= 50: return "D"
+    if score >= 90:
+        return "A+"
+    if score >= 80:
+        return "A"
+    if score >= 70:
+        return "B"
+    if score >= 60:
+        return "C"
+    if score >= 50:
+        return "D"
     return "F"
 
 

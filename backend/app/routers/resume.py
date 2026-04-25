@@ -1,18 +1,18 @@
 from typing import Optional
 
-from fastapi import APIRouter, Form, HTTPException, Request, UploadFile, File
+from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import JSONResponse, Response
 
 from app.limiter import limiter
-from app.services.parser   import extract_text
 from app.services.analyzer import analyze_resume
 from app.services.db_service import (
-    save_resume_analysis,
-    get_resume_history,
     get_resume_by_id,
     get_resume_file,
+    get_resume_history,
     get_resumes_by_user,
+    save_resume_analysis,
 )
+from app.services.parser import extract_text
 
 router = APIRouter()
 
