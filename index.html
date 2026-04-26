@@ -632,17 +632,29 @@
     /* ─────────────────────────────────────────────────────────
        SCROLL REVEAL
     ───────────────────────────────────────────────────────── */
-    .reveal {
-      opacity: 0; transform: translateY(24px);
-      transition: opacity .55s ease, transform .55s ease;
-    }
-    .reveal.v { opacity: 1; transform: none; }
+    /* Base state — visible by default so content shows without JS */
+    .reveal { transition: opacity .6s ease, transform .6s ease; }
+    /* JS adds .offscreen to elements below the fold before observing */
+    .reveal.offscreen { opacity: 0; transform: translateY(26px); }
+    /* Observer adds .v to make them visible */
+    .reveal.v { opacity: 1 !important; transform: none !important; }
     .d1 { transition-delay: .05s; }
-    .d2 { transition-delay: .12s; }
-    .d3 { transition-delay: .19s; }
-    .d4 { transition-delay: .26s; }
-    .d5 { transition-delay: .33s; }
-    .d6 { transition-delay: .40s; }
+    .d2 { transition-delay: .13s; }
+    .d3 { transition-delay: .21s; }
+    .d4 { transition-delay: .29s; }
+    .d5 { transition-delay: .37s; }
+    .d6 { transition-delay: .45s; }
+
+    /* Hero always visible — CSS keyframe entrance, no scroll dependency */
+    @keyframes heroIn {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: none; }
+    }
+    .hero-badge { animation: heroIn .5s ease both; }
+    .hero h1    { animation: heroIn .55s .08s ease both; }
+    .hero-sub   { animation: heroIn .55s .16s ease both; }
+    .hero-btns  { animation: heroIn .55s .24s ease both; }
+    .stats-row  { animation: heroIn .55s .32s ease both; }
 
     /* ─────────────────────────────────────────────────────────
        ENTER TRANSITION
@@ -711,23 +723,23 @@
   <section class="hero">
     <div class="wrap">
 
-      <div class="hero-badge reveal">
+      <div class="hero-badge">
         <span class="live-dot"></span>
         Live · Vercel + Render + MongoDB Atlas
       </div>
 
-      <h1 class="reveal d1">
+      <h1>
         Resume Intelligence<br>
         <span class="gradient-text">Powered by Real AI</span>
       </h1>
 
-      <p class="hero-sub reveal d2">
+      <p class="hero-sub">
         Upload any resume — PDF, DOCX, TXT, or image scan.
         Get real scores from OCR, spaCy NLP, and Google Gemini.
         No mock data. No placeholders. Every number from your document.
       </p>
 
-      <div class="hero-btns reveal d3">
+      <div class="hero-btns">
         <button class="btn-primary" onclick="enterApp()">
           Open Dashboard <span class="arrow">→</span>
         </button>
@@ -737,7 +749,7 @@
         </a>
       </div>
 
-      <div class="stats-row reveal d4">
+      <div class="stats-row">
         <div class="stat-card">
           <div class="stat-value" data-target="5">0</div>
           <div class="stat-label">File formats</div>
@@ -1310,29 +1322,38 @@
   })();
 })();
 
-/* ── Intersection observer ───────────────────────────────── */
+/* ── Scroll reveal — JS-only hidden state ────────────────── */
+// Mark elements below the fold as offscreen BEFORE observing.
+// Elements already in the viewport are never hidden — they are
+// visible immediately from HTML paint, regardless of JS timing.
+document.querySelectorAll('.reveal').forEach(el => {
+  if (el.getBoundingClientRect().top > window.innerHeight * 0.95) {
+    el.classList.add('offscreen');
+  }
+});
+
 const io = new IntersectionObserver(entries => {
   entries.forEach(e => {
     if (!e.isIntersecting) return;
 
-    // Generic reveal
     if (e.target.classList.contains('reveal')) {
+      e.target.classList.remove('offscreen');
       e.target.classList.add('v');
-      // Start counters inside this element
       e.target.querySelectorAll('[data-target]').forEach(el => countUp(el));
     }
-
-    // Score bar animation
     if (e.target.classList.contains('weight-item')) {
       e.target.classList.add('in-view');
     }
 
     io.unobserve(e.target);
   });
-}, { threshold: 0.12 });
+}, { threshold: 0.1 });
 
 document.querySelectorAll('.reveal').forEach(el => io.observe(el));
 document.querySelectorAll('.weight-item').forEach(el => io.observe(el));
+
+// Fire counters for stats-row (no longer a .reveal element)
+document.querySelectorAll('.stats-row [data-target]').forEach(el => countUp(el));
 
 /* ── Counter animation ───────────────────────────────────── */
 function countUp(el) {
