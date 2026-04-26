@@ -29,7 +29,7 @@ interface BackendFeatures {
 interface BackendNLPInsights {
   companies_detected: string[];
   roles_detected: string[];
-  experience_timeline: string[];
+  experience_timeline: (string | BackendNLPExperienceEntry)[];
 }
 
 export interface BackendAIFeedback {
@@ -58,10 +58,7 @@ interface BackendAnalysisResponse {
   overall_score: number;
   scores: { experience: number; skills: number; content: number; ats: number };
   features: BackendFeatures;
-  nlp_insights: BackendNLPInsights & {
-    // Phase 5: structured timeline objects
-    experience_timeline: (string | BackendNLPExperienceEntry)[];
-  };
+  nlp_insights: BackendNLPInsights;
   // Phase 5: renamed ai_feedback → ai_insights (supports both keys)
   ai_insights?: BackendAIFeedback | null;
   ai_feedback?: BackendAIFeedback | null;
