@@ -1,52 +1,68 @@
+# ─── Node / Frontend ─────────────────────────────────────────────
+node_modules/
+dist/
+dist-ssr/
+.vite/
+*.local
+
 # Logs
-logs
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
-lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
+# ─── Python / Backend ────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+.Python
+*.egg-info/
+*.egg
+.eggs/
+build/
 
-# Editor directories and files
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+backend/venv/
+backend/.venv/
+
+# Test / coverage artefacts
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+
+# ─── Environment / Secrets — NEVER commit ─────────────────────────
+.env
+.env.local
+.env.*.local
+backend/.env
+backend/.env.local
+
+# ─── Editor / OS ──────────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+Thumbs.db
+ehthumbs.db
+.idea/
 .vscode/*
 !.vscode/extensions.json
-.idea
-.DS_Store
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
-# Environment files (both frontend and backend)
-.env
-.env.local
-.env.*.local
-backend/.env
+*.swp
+*.swo
 
-# Python — backend artefacts
-__pycache__/
-*.py[cod]
-*.pyo
-*.pyd
-.Python
-*.egg-info/
-*.egg
-.eggs/
-dist/
-build/
-
-# Python virtual environments
-.venv/
-venv/
-env/
-ENV/
-
-# Python test and coverage
-.pytest_cache/
-.coverage
-htmlcov/
+# ─── Misc ─────────────────────────────────────────────────────────
+*.pem
+*.key
