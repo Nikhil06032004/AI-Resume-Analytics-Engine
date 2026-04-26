@@ -1262,7 +1262,10 @@
 
 </div><!-- /#landing -->
 
-<script type="module">
+<!-- Vite entry: loads React bundle but does NOT auto-mount -->
+<script type="module" src="/src/main.tsx"></script>
+
+<script>
 /* ── Particle canvas ─────────────────────────────────────── */
 (function () {
   const c   = document.getElementById('bg-canvas');
@@ -1369,33 +1372,27 @@ function countUp(el) {
 }
 
 /* ── Enter app ───────────────────────────────────────────── */
-let appMounted = false;
-
-window.enterApp = async function enterApp() {
-  const screen  = document.getElementById('enter-screen');
-  const landing = document.getElementById('landing');
-  const root    = document.getElementById('root');
+function enterApp() {
+  var screen  = document.getElementById('enter-screen');
+  var landing = document.getElementById('landing');
+  var root    = document.getElementById('root');
 
   screen.classList.add('show');
 
-  if (!appMounted) {
-    appMounted = true;
-    try {
-      const { mountApp } = await import('/src/main.tsx');
-      mountApp();
-    } catch (e) {
-      console.error('Failed to mount app:', e);
-      appMounted = false;
-    }
+  // Signal main.tsx to mount (covers race: user clicks before bundle loads)
+  window.__enterAppCalled = true;
+  // If bundle already loaded, mountApp is registered on window
+  if (typeof window.mountApp === 'function') {
+    window.mountApp();
   }
 
-  setTimeout(() => {
+  setTimeout(function () {
     landing.style.display = 'none';
     root.style.setProperty('display', 'block', 'important');
     window.scrollTo({ top: 0, behavior: 'instant' });
     screen.classList.remove('show');
   }, 550);
-};
+}
 </script>
 
 </body>

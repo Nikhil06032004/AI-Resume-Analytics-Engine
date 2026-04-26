@@ -3,7 +3,11 @@ import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
 
-export function mountApp(): void {
+let mounted = false;
+
+function mountApp(): void {
+  if (mounted) return;
+  mounted = true;
   const container = document.getElementById('root');
   if (!container) return;
   createRoot(container).render(
@@ -11,4 +15,12 @@ export function mountApp(): void {
       <App />
     </StrictMode>
   );
+}
+
+// Expose for enterApp() in index.html
+(window as unknown as Record<string, unknown>).mountApp = mountApp;
+
+// If the user clicked before this bundle finished loading
+if ((window as unknown as Record<string, unknown>).__enterAppCalled) {
+  mountApp();
 }
