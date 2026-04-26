@@ -1262,10 +1262,7 @@
 
 </div><!-- /#landing -->
 
-<!-- React app -->
-<script type="module" src="/src/main.tsx"></script>
-
-<script>
+<script type="module">
 /* ── Particle canvas ─────────────────────────────────────── */
 (function () {
   const c   = document.getElementById('bg-canvas');
@@ -1372,21 +1369,33 @@ function countUp(el) {
 }
 
 /* ── Enter app ───────────────────────────────────────────── */
-function enterApp() {
+let appMounted = false;
+
+window.enterApp = async function enterApp() {
   const screen  = document.getElementById('enter-screen');
   const landing = document.getElementById('landing');
   const root    = document.getElementById('root');
 
   screen.classList.add('show');
 
+  if (!appMounted) {
+    appMounted = true;
+    try {
+      const { mountApp } = await import('/src/main.tsx');
+      mountApp();
+    } catch (e) {
+      console.error('Failed to mount app:', e);
+      appMounted = false;
+    }
+  }
+
   setTimeout(() => {
     landing.style.display = 'none';
-    // Use setProperty with priority to override the !important CSS rule
     root.style.setProperty('display', 'block', 'important');
     window.scrollTo({ top: 0, behavior: 'instant' });
     screen.classList.remove('show');
   }, 550);
-}
+};
 </script>
 
 </body>
