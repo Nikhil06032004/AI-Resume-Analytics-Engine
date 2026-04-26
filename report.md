@@ -2,7 +2,7 @@
 
 **Author:** Nikhil (Nikhil06032004)
 **Repository:** https://github.com/Nikhil06032004/AI-Resume-Analytics-Engine
-**Live Application:** https://resume-analytics-engine.vercel.app
+**Live Application:** https://resume-insight-engine.vercel.app
 **API Base URL:** https://ai-resume-analytics-engine.onrender.com
 **Report Date:** April 2026
 

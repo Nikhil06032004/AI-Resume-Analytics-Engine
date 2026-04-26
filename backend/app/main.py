@@ -63,7 +63,7 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # ── CORS ─────────────────────────────────────────────────────────
 # Production: set FRONTEND_URL to a comma-separated list of allowed origins.
-# Example: "https://resume-insight-engine.vercel.app,https://resume-analytics-engine.vercel.app"
+# Example: "https://resume-insight-engine.vercel.app"
 # Dev: leave FRONTEND_URL unset → falls back to allow_origins=["*"].
 # allow_credentials stays False — this API uses no cookies or sessions.
 _DEV_ORIGINS = [

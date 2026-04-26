@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/Nikhil06032004/AI-Resume-Analytics-Engine/actions/workflows/ci.yml/badge.svg)](https://github.com/Nikhil06032004/AI-Resume-Analytics-Engine/actions/workflows/ci.yml)
 [![Deploy](https://github.com/Nikhil06032004/AI-Resume-Analytics-Engine/actions/workflows/deploy.yml/badge.svg)](https://github.com/Nikhil06032004/AI-Resume-Analytics-Engine/actions/workflows/deploy.yml)
-[![Vercel](https://img.shields.io/badge/Frontend-Vercel-black?logo=vercel&logoColor=white)](https://resume-analytics-engine.vercel.app)
+[![Vercel](https://img.shields.io/badge/Frontend-Vercel-black?logo=vercel&logoColor=white)](https://resume-insight-engine.vercel.app)
 [![Render](https://img.shields.io/badge/Backend-Render-46E3B7?logo=render&logoColor=white)](https://ai-resume-analytics-engine.onrender.com)
 [![MongoDB](https://img.shields.io/badge/Database-MongoDB_Atlas-47A248?logo=mongodb&logoColor=white)](https://www.mongodb.com/atlas)
 [![Python](https://img.shields.io/badge/Python-3.11-3776AB?logo=python&logoColor=white)](https://python.org)
@@ -13,7 +13,7 @@
 
 | | |
 |---|---|
-| **Live App** | https://resume-analytics-engine.vercel.app |
+| **Live App** | https://resume-insight-engine.vercel.app |
 | **API** | https://ai-resume-analytics-engine.onrender.com |
 | **API Docs** | https://ai-resume-analytics-engine.onrender.com/docs |
 | **Repository** | https://github.com/Nikhil06032004/AI-Resume-Analytics-Engine |
@@ -85,7 +85,7 @@ The AI Resume Analytics Engine accepts a resume file, extracts its text through 
 
 | Layer | Platform | URL | Notes |
 |---|---|---|---|
-| Frontend | Vercel (free tier) | https://resume-analytics-engine.vercel.app | Edge CDN, auto-deploy on push |
+| Frontend | Vercel (free tier) | https://resume-insight-engine.vercel.app | Edge CDN, auto-deploy on push |
 | Backend | Render (free tier) | https://ai-resume-analytics-engine.onrender.com | Docker container, spins down after 15 min idle |
 | Database | MongoDB Atlas (M0 free) | — | 512 MB, `resume_analyzer` database |
 | File Storage | MongoDB GridFS | — | Binary chunks in `resume_files` bucket |
