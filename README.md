@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/Nikhil06032004/AI-Resume-Analytics-Engine/actions/workflows/ci.yml/badge.svg)](https://github.com/Nikhil06032004/AI-Resume-Analytics-Engine/actions/workflows/ci.yml)
 [![Deploy](https://github.com/Nikhil06032004/AI-Resume-Analytics-Engine/actions/workflows/deploy.yml/badge.svg)](https://github.com/Nikhil06032004/AI-Resume-Analytics-Engine/actions/workflows/deploy.yml)
-[![Vercel](https://img.shields.io/badge/Frontend-Vercel-black?logo=vercel&logoColor=white)](https://ai-resume-analytics-engine.vercel.app)
+[![Vercel](https://img.shields.io/badge/Frontend-Vercel-black?logo=vercel&logoColor=white)](https://resume-analytics-engine.vercel.app)
 [![Render](https://img.shields.io/badge/Backend-Render-46E3B7?logo=render&logoColor=white)](https://ai-resume-analytics-engine.onrender.com)
 [![MongoDB](https://img.shields.io/badge/Database-MongoDB_Atlas-47A248?logo=mongodb&logoColor=white)](https://www.mongodb.com/atlas)
 [![Python](https://img.shields.io/badge/Python-3.11-3776AB?logo=python&logoColor=white)](https://python.org)
@@ -13,7 +13,7 @@
 
 | | |
 |---|---|
-| **Live App** | https://ai-resume-analytics-engine.vercel.app |
+| **Live App** | https://resume-analytics-engine.vercel.app |
 | **API** | https://ai-resume-analytics-engine.onrender.com |
 | **API Docs** | https://ai-resume-analytics-engine.onrender.com/docs |
 | **Repository** | https://github.com/Nikhil06032004/AI-Resume-Analytics-Engine |
@@ -33,7 +33,7 @@ A production-deployed, full-stack resume analysis platform. Upload any resume �
    - [Deploy Workflow — deploy.yml](#deploy-workflow--deployyml)
    - [GitHub Actions Debugging History](#github-actions-debugging-history)
 4. [System Architecture](#4-system-architecture)
-5. [User Workflow — 4 Steps](#5-user-workflow--4-steps)
+5. [User Workflow — Landing Page + 4 Steps](#5-user-workflow--landing-page--4-steps)
 6. [File Parsing Pipeline](#6-file-parsing-pipeline)
    - [PDF Parsing](#pdf-parsing)
    - [DOCX Parsing](#docx-parsing)
@@ -85,7 +85,7 @@ The AI Resume Analytics Engine accepts a resume file, extracts its text through 
 
 | Layer | Platform | URL | Notes |
 |---|---|---|---|
-| Frontend | Vercel (free tier) | https://ai-resume-analytics-engine.vercel.app | Edge CDN, auto-deploy on push |
+| Frontend | Vercel (free tier) | https://resume-analytics-engine.vercel.app | Edge CDN, auto-deploy on push |
 | Backend | Render (free tier) | https://ai-resume-analytics-engine.onrender.com | Docker container, spins down after 15 min idle |
 | Database | MongoDB Atlas (M0 free) | — | 512 MB, `resume_analyzer` database |
 | File Storage | MongoDB GridFS | — | Binary chunks in `resume_files` bucket |
@@ -230,6 +230,7 @@ These issues were discovered and fixed during CI setup. Documented here so futur
 | Frontend CI: ESLint `no-explicit-any` | `skillMatch: any` in `resumeAnalyzer.ts` | Typed as `{ matchPercentage: number; missing: string[] }` |
 | Frontend CI: ESLint errors ×3 | `resumeParser.ts` and `resumeAnalyzer.ts` — dead code, no imports | Deleted both files entirely |
 | Frontend CI: TypeScript `TS2339` (`never`) | `BackendNLPInsights.experience_timeline: string[]` intersected with `(string \| Entry)[]` → element type resolved to `string` → after string guard, narrowed to `never` | Changed interface declaration to `(string \| BackendNLPExperienceEntry)[]` directly |
+| Landing page bypassed — dashboard shown on load | `<script type="module" src="/src/main.tsx">` auto-executed `createRoot().render()` on every page load; `#root { display:none }` hid React visually but it was mounted | Changed `main.tsx` to register `window.mountApp` instead of self-executing; `enterApp()` calls `window.mountApp()` on click. Note: dynamic `import('/src/main.tsx')` inside `<script type="module">` was tried first but breaks in production — Vite compiles TypeScript to hashed filenames, so the path doesn't exist at runtime |
 
 ---
 
@@ -299,9 +300,26 @@ These issues were discovered and fixed during CI setup. Documented here so futur
 
 ---
 
-## 5. User Workflow — 4 Steps
+## 5. User Workflow — Landing Page + 4 Steps
 
 ```
+┌───────────────────────────────────────────────────────────────────┐
+│  LANDING PAGE  (index.html — pure static HTML, no React)          │
+│                                                                   │
+│  Shown immediately on every page load. React bundle is fetched    │
+│  but does NOT mount until the user clicks "Open Dashboard".       │
+│                                                                   │
+│  Sections:  Hero · Pipeline overview · Features bento grid        │
+│             OCR detail · Scoring model · Tech stack · CTA         │
+│                                                                   │
+│  [Open Dashboard →]  →  enterApp() called                         │
+│       │                                                           │
+│       ├─ Sets window.__enterAppCalled = true                       │
+│       ├─ Calls window.mountApp() (registered by main.tsx)         │
+│       ├─ Shows loading overlay (spinner, 550 ms)                  │
+│       └─ Hides #landing, shows #root (React app)                  │
+└────────────────────────────┬──────────────────────────────────────┘
+                             ▼
 ┌───────────────────────────────────────────────────────────────────┐
 │  STEP 1 — UPLOAD                              ProgressTracker: ●○○○│
 │                                                                   │
@@ -1093,7 +1111,9 @@ AI-Resume-Analytics-Engine/
 │
 ├── src/
 │   ├── App.tsx             Step router: upload → job-matching → analyzing → results
-│   ├── main.tsx            React entry point
+│   ├── main.tsx            React entry — registers window.mountApp(), does NOT
+│   │                       auto-call createRoot(). Called only when enterApp()
+│   │                       is clicked on the landing page.
 │   │
 │   ├── components/
 │   │   ├── Upload/
@@ -1390,6 +1410,8 @@ VITE_API_URL=http://localhost:8000
 | "Failed to fetch" on upload | `VITE_API_URL` not baked into build | Check Network tab in DevTools — if URL is `localhost:8000`, trigger Vercel redeploy with new build |
 | Charts blank / no data | API returned error | Check browser Console for CORS errors; verify backend is awake (Render free tier spins down) |
 | `tsc --noEmit` fails in CI | Wrong tsconfig target | Always use `npx tsc -p tsconfig.app.json --noEmit` |
+| Landing page skipped — dashboard shows on load | Old Vercel deployment cached before `window.mountApp` fix | Hard-refresh (`Ctrl+Shift+R`) to bypass CDN cache; verify Vercel shows the latest commit deployed |
+| "Open Dashboard" click does nothing | Race: user clicked before React bundle loaded AND `__enterAppCalled` flag was not set | Should not happen with current code — `window.__enterAppCalled = true` is set before `window.mountApp()` is called; `main.tsx` checks this flag on load and mounts immediately if set |
 
 ### Render Free Tier
 
