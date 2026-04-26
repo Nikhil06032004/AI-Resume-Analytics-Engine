@@ -11,7 +11,7 @@
 
 **Do not open a public issue for security vulnerabilities.**
 
-Send details to **dijaasoftware@gmail.com** with:
+Send details to **nikhilsharma632004@gmail.com** with:
 
 - Description of the vulnerability
 - Steps to reproduce
