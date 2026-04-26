@@ -62,16 +62,31 @@ app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # ── CORS ─────────────────────────────────────────────────────────
-# Public REST API — no cookies/sessions, so allow_credentials=False
-# is correct and lets us safely use allow_origins=["*"].
-# This avoids the Starlette ValueError that crashes startup when
-# allow_credentials=True is combined with the wildcard origin.
+# Production: set FRONTEND_URL to a comma-separated list of allowed origins.
+# Example: "https://resume-insight-engine.vercel.app,https://resume-analytics-engine.vercel.app"
+# Dev: leave FRONTEND_URL unset → falls back to allow_origins=["*"].
+# allow_credentials stays False — this API uses no cookies or sessions.
+_DEV_ORIGINS = [
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:3000",
+]
+
+def _build_cors_origins() -> list[str]:
+    if not settings.frontend_url:
+        return ["*"]
+    prod = [u.strip().rstrip("/") for u in settings.frontend_url.split(",") if u.strip()]
+    return prod + _DEV_ORIGINS
+
+_CORS_ORIGINS = _build_cors_origins()
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=_CORS_ORIGINS,
     allow_credentials=False,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Content-Type", "Accept", "Authorization"],
     expose_headers=["X-Process-Time-Ms"],
 )
 
@@ -117,7 +132,8 @@ async def debug_config() -> dict:
         "ai_configured":  bool(settings.ai_api_key),
         "db_configured":  bool(settings.mongodb_uri),
         "frontend_url":   settings.frontend_url or "(not set — all origins allowed)",
-        "cors_mode":      "allow_origins=['*']",
+        "cors_origins":   _CORS_ORIGINS,
+        "cors_mode":      "restricted" if settings.frontend_url else "wildcard (dev)",
     }
 
 
